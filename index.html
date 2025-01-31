@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Trilhando RPG - A Transtravessia</title>
+  <!-- Importando fontes elegantes do Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    /* Reset básico */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #2C3E50, #4CA1AF);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    header {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      color: #fff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    #game {
+      background-color: #fff;
+      border-radius: 10px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+      overflow: hidden;
+      font-family: 'Playfair Display', serif;
+    }
+    
+    #story {
+      padding: 30px 40px;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      border-bottom: 1px solid #eee;
+      background-color: #fdfdfd;
+    }
+    
+    #options {
+      padding: 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background-color: #fafafa;
+    }
+    
+    .option button {
+      width: 100%;
+      padding: 12px 20px;
+      border: 2px solid #4CA1AF;
+      border-radius: 5px;
+      background-color: transparent;
+      font-size: 1rem;
+      font-family: 'Roboto', sans-serif;
+      color: #4CA1AF;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .option button:hover {
+      background-color: #4CA1AF;
+      color: #fff;
+    }
+    
+    .option button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(76, 161, 175, 0.5);
+    }
+    
+    /* Estilo para reiniciar o jogo */
+    .restart {
+      margin-top: 10px;
+      text-align: center;
+    }
+    
+    .restart button {
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+    
+    .restart button:hover {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Cabeçalho com o título do jogo -->
+  <header>
+    <h1>Trilhando RPG - A Transtravessia (50 fases)</h1>
+  </header>
+
+  <div id="game">
+    <div id="story"><!-- Texto da história --></div>
+    <div id="options"><!-- Opções serão inseridas aqui --></div>
+  </div>
+
+  <script>
+    // Função para embaralhar um array (Fisher-Yates shuffle)
+    function shuffleArray(array) {
+      const shuffled = array.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Objeto contendo todas as fases e finais do jogo
+    const gameData = {
+      // Fases 1 a 10
+      fase1: {
+        text: "Fase 1 - Você chega à entrada da misteriosa Transtravessia, onde lendas contam que somente os verdadeiramente corajosos descobrem o caminho do destino. Qual rumo você escolhe?",
+        options: [
+          { text: "Siga pela trilha principal iluminada", action: "fase2" },        // Correta
+          { text: "Adentre a trilha esquecida pela neblina", action: "finalA" },
+          { text: "Vague pelas margens da floresta densa", action: "finalB" }
+        ]
+      },
+      fase2: {
+        text: "Fase 2 - A trilha se estende entre pinheiros centenários e rochas milenares. O sussurro do vento parece carregar segredos. Como prosseguir?",
+        options: [
+          { text: "Investigue um som distante entre as árvores", action: "finalA" },
+          { text: "Siga atento à trilha, mantendo a direção", action: "fase3" },         // Correta
+          { text: "Desvie para explorar uma formação rochosa", action: "finalB" }
+        ]
+      },
+      fase3: {
+        text: "Fase 3 - Você chega a uma encruzilhada. Uma trilha parece mais segura, enquanto outra se perde na penumbra. Qual caminho escolher?",
+        options: [
+          { text: "Escolha a trilha que sobe íngreme", action: "finalA" },
+          { text: "Opte pelo caminho repleto de sombras", action: "finalB" },
+          { text: "Tome o caminho iluminado pelo luar", action: "fase4" }             // Correta
+        ]
+      },
+      fase4: {
+        text: "Fase 4 - Vestígios de antigos viajantes pontuam o caminho, contando histórias de glória e desventura. Qual será seu próximo movimento?",
+        options: [
+          { text: "Siga os passos dos que vieram antes", action: "fase5" },            // Correta
+          { text: "Investigue uma caverna próxima", action: "finalA" },
+          { text: "Procure por sinais misteriosos nas pedras", action: "finalB" }
+        ]
+      },
+      fase5: {
+        text: "Fase 5 - A trilha se adensa e a névoa começa a envolver a paisagem. A incerteza se mistura com a beleza do ambiente. O que fazer?",
+        options: [
+          { text: "Aventure-se por uma vereda lateral", action: "finalA" },
+          { text: "Mantenha-se na trilha principal, confiando no seu instinto", action: "fase6" }, // Correta
+          { text: "Tente contornar a neblina por um atalho arriscado", action: "finalB" }
+        ]
+      },
+      fase6: {
+        text: "Fase 6 - Um riacho cristalino sussurra segredos enquanto corre entre as pedras. Sua jornada agora exige uma decisão. Qual escolha você faz?",
+        options: [
+          { text: "Pare para ouvir os murmúrios das águas", action: "finalA" },
+          { text: "Siga a margem do riacho em busca de pistas", action: "finalB" },
+          { text: "Atravessar o riacho com cautela e seguir adiante", action: "fase7" }       // Correta
+        ]
+      },
+      fase7: {
+        text: "Fase 7 - Depois de atravessar o riacho, uma clareira se abre, onde a luz dança entre as folhas. Sinta o chamado da serra. Como prosseguir?",
+        options: [
+          { text: "Caminhe direto pela clareira, guiado pela luz", action: "fase8" },      // Correta
+          { text: "Desvie para investigar um som distante", action: "finalA" },
+          { text: "Aventure-se pela borda da clareira, mergulhando na sombra", action: "finalB" }
+        ]
+      },
+      fase8: {
+        text: "Fase 8 - Formações rochosas esculpidas pelo tempo surgem à sua frente. Um leve tremor no solo chama sua atenção. Qual a sua decisão?",
+        options: [
+          { text: "Aproxime-se da rocha para examinar os sinais", action: "finalA" },
+          { text: "Mantenha a distância e siga o caminho seguro", action: "fase9" },         // Correta
+          { text: "Tente escalar a formação para ter uma visão melhor", action: "finalB" }
+        ]
+      },
+      fase9: {
+        text: "Fase 9 - A trilha se estreita e a subida se torna íngreme. O vento sussurra conselhos antigos. Qual ação você toma?",
+        options: [
+          { text: "Procure abrigo entre as pedras, cauteloso com o vento", action: "finalA" },
+          { text: "Siga por um atalho indicado pelo vento, arriscando o desconhecido", action: "finalB" },
+          { text: "Encare a subida com coragem e mantenha-se na trilha", action: "fase10" }   // Correta
+        ]
+      },
+      fase10: {
+        text: "Fase 10 - No meio da subida, o caminho se bifurca. Uma rota parece uma passagem secreta; a outra, o caminho tradicional. Qual escolha?",
+        options: [
+          { text: "Entre pela passagem secreta, confiando na intuição", action: "fase11" }, // Correta
+          { text: "Siga a rota tradicional, mesmo que pareça monótona", action: "finalA" },
+          { text: "Desvie para explorar uma trilha lateral esquecida", action: "finalB" }
+        ]
+      },
+      // Fases 11 a 20
+      fase11: {
+        text: "Fase 11 - A passagem o leva a uma floresta encantada, onde o tempo parece desacelerar e cada sombra guarda um mistério. O que você faz?",
+        options: [
+          { text: "Vague sem rumo, encantado pelas ilusões da floresta", action: "finalA" },
+          { text: "Procure sinais que indiquem o caminho verdadeiro", action: "fase12" }, // Correta
+          { text: "Aproxime-se de uma árvore centenária em busca de respostas", action: "finalB" }
+        ]
+      },
+      fase12: {
+        text: "Fase 12 - Entre os raios de sol que penetram as copas, um feixe luminoso parece guiar seus passos. Qual decisão tomar?",
+        options: [
+          { text: "Siga por uma trilha paralela onde a luz não alcança", action: "finalA" },
+          { text: "Explore uma trilha envolta em sombras", action: "finalB" },
+          { text: "Deixe-se guiar pelo feixe luminoso e avance com confiança", action: "fase13" } // Correta
+        ]
+      },
+      fase13: {
+        text: "Fase 13 - Agora, você se encontra à beira de um desfiladeiro com vistas deslumbrantes e perigos ocultos. Como prosseguir?",
+        options: [
+          { text: "Caminhe pela borda do desfiladeiro, admirando a paisagem", action: "fase14" }, // Correta
+          { text: "Atravesse o desfiladeiro por uma passagem estreita e arriscada", action: "finalA" },
+          { text: "Permaneça na margem e espere que o tempo revele o caminho", action: "finalB" }
+        ]
+      },
+      fase14: {
+        text: "Fase 14 - Do outro lado do desfiladeiro, a trilha se reinventa entre um bosque silencioso e misterioso. Qual caminho seguir?",
+        options: [
+          { text: "Siga pela trilha oculta entre as árvores densas", action: "finalA" },
+          { text: "Mantenha o rumo indicado pelo eco do vento", action: "fase15" }, // Correta
+          { text: "Desvie para explorar um caminho coberto de musgo e lendas", action: "finalB" }
+        ]
+      },
+      fase15: {
+        text: "Fase 15 - O bosque se transforma em uma vereda repleta de segredos. Cada som pode ser uma pista ou um engano. O que você escolhe?",
+        options: [
+          { text: "Siga o som de uma melodia distante, sem questionar", action: "finalA" },
+          { text: "Confie na sua intuição e siga um caminho sinuoso", action: "finalB" },
+          { text: "Mantenha o foco no caminho que o destino lhe reserva", action: "fase16" } // Correta
+        ]
+      },
+      fase16: {
+        text: "Fase 16 - A trilha se torna desafiadora, ladeada por penhascos e ventos impetuosos. O risco é palpável. Qual sua decisão?",
+        options: [
+          { text: "Encare o risco de frente, avançando com determinação", action: "fase17" }, // Correta
+          { text: "Retroceda e tente um caminho aparentemente mais seguro", action: "finalA" },
+          { text: "Divida sua atenção entre explorar e seguir o caminho principal", action: "finalB" }
+        ]
+      },
+      fase17: {
+        text: "Fase 17 - Entre penhascos e quedas, a serra revela seu lado mais implacável. Sua perseverança é testada. O que fazer?",
+        options: [
+          { text: "Tente escalar um penhasco para ganhar vantagem", action: "finalA" },
+          { text: "Siga com cautela, mantendo o equilíbrio e o foco", action: "fase18" },    // Correta
+          { text: "Arrisque uma rota acidentada, ignorando os perigos", action: "finalB" }
+        ]
+      },
+      fase18: {
+        text: "Fase 18 - A poucos passos do cume, a energia da serra se torna quase mística. A verdade da Transtravessia se aproxima. Qual a sua escolha?",
+        options: [
+          { text: "Pare para contemplar o mistério, mas perca o rumo", action: "finalA" },
+          { text: "Investigue uma trilha lateral promissora", action: "finalB" },
+          { text: "Siga com fé no destino, avançando rumo ao cume", action: "fase19" } // Correta
+        ]
+      },
+      fase19: {
+        text: "Fase 19 - Quase no ápice da jornada, a serra revela um portal entre as rochas. O ar vibra com a promessa do desconhecido. Qual será seu próximo passo?",
+        options: [
+          { text: "Aproxime-se do portal, confiando em sua força interior", action: "fase20" }, // Correta
+          { text: "Desvie e explore um caminho alternativo na penumbra", action: "finalA" },
+          { text: "Ignore o portal, duvidando do que vê", action: "finalB" }
+        ]
+      },
+      fase20: {
+        text: "Fase 20 - Você atravessa o portal e adentra uma região de encantos e perigos inéditos. O caminho se alonga e a lenda se aprofunda. Siga em frente para descobrir novos segredos.",
+        options: [
+          { text: "Siga em frente com determinação", action: "fase21" },  // Correta
+          { text: "Pare para meditar sobre os mistérios revelados", action: "finalA" },
+          { text: "Desvie para explorar um santuário oculto", action: "finalB" }
+        ]
+      },
+      // Fases 21 a 30
+      fase21: {
+        text: "Fase 21 - Ao deixar a antiga passagem, você se depara com um altar esculpido na rocha, repleto de inscrições enigmáticas. Qual seu próximo passo?",
+        options: [
+          { text: "Tente decifrar as inscrições, mesmo que perca tempo", action: "finalA" },
+          { text: "Ignore o altar e retome a trilha principal", action: "finalB" },
+          { text: "Siga adiante, confiando na intuição dos ancestrais", action: "fase22" } // Correta
+        ]
+      },
+      fase22: {
+        text: "Fase 22 - A trilha se estreita entre árvores retorcidas e sombras dançantes. O murmúrio do vento parece indicar um caminho oculto. O que fazer?",
+        options: [
+          { text: "Investigue um som sutil vindo das raízes", action: "finalA" },
+          { text: "Aventure-se pelo mato denso que se abre à direita", action: "finalB" },
+          { text: "Siga o som do vento, que lhe aponta a direção correta", action: "fase23" } // Correta
+        ]
+      },
+      fase23: {
+        text: "Fase 23 - Você emerge de um corredor de árvores e encontra um pequeno lago de águas calmas, que refletem o céu. Algo em seu interior chama sua atenção. Qual sua escolha?",
+        options: [
+          { text: "Aproxime-se para examinar as margens do lago", action: "finalA" },
+          { text: "Mergulhe nas águas em busca de segredos submersos", action: "finalB" },
+          { text: "Contorne o lago, mantendo o foco na trilha", action: "fase24" } // Correta
+        ]
+      },
+      fase24: {
+        text: "Fase 24 - Após contornar o lago, a trilha se divide entre formações rochosas e uma leve neblina. Qual o seu próximo movimento?",
+        options: [
+          { text: "Siga a rota que se perde na neblina espessa", action: "finalA" },
+          { text: "Desvie para explorar as rochas e suas histórias", action: "finalB" },
+          { text: "Mantenha-se na trilha, guiado pelo brilho sutil do horizonte", action: "fase25" } // Correta
+        ]
+      },
+      fase25: {
+        text: "Fase 25 - A lenda da Transtravessia se aprofunda a cada passo. Vestígios de um antigo povo se fazem presentes. Como prosseguir?",
+        options: [
+          { text: "Pare para estudar os símbolos ancestrais, perdendo-se no tempo", action: "finalA" },
+          { text: "Examine os vestígios, arriscando sua jornada", action: "finalB" },
+          { text: "Abrace o mistério e continue a jornada", action: "fase26" } // Correta
+        ]
+      },
+      fase26: {
+        text: "Fase 26 - Em meio a uma trilha ladeada por arbustos exóticos, um feixe de luz rompe a penumbra. Qual sua decisão?",
+        options: [
+          { text: "Siga o feixe de luz, mesmo sem conhecer sua origem", action: "fase27" }, // Correta
+          { text: "Ignore a luz e opte por um caminho sombrio à esquerda", action: "finalA" },
+          { text: "Procure uma rota alternativa distante do brilho", action: "finalB" }
+        ]
+      },
+      fase27: {
+        text: "Fase 27 - A luz o conduz por um corredor de árvores onde o tempo parece desacelerar. No final, uma antiga ponte de pedra se apresenta. O que você faz?",
+        options: [
+          { text: "Atravesse a ponte com cautela, confiando na estrutura antiga", action: "fase28" }, // Correta
+          { text: "Examine a ponte em busca de sinais de desmoronamento", action: "finalA" },
+          { text: "Desvie da ponte e procure outra rota", action: "finalB" }
+        ]
+      },
+      fase28: {
+        text: "Fase 28 - Do outro lado da ponte, a trilha se enrosca entre penhascos e vales ocultos. Um brilho distante anuncia algo grandioso. Qual será seu próximo passo?",
+        options: [
+          { text: "Siga o brilho, mesmo que o caminho seja incerto", action: "fase29" }, // Correta
+          { text: "Pare para descansar e perder a orientação", action: "finalA" },
+          { text: "Aventure-se por uma trilha lateral na esperança de atalhos", action: "finalB" }
+        ]
+      },
+      fase29: {
+        text: "Fase 29 - Aproximando-se do destino, o ambiente adquire um tom místico. Você se encontra diante de uma encruzilhada final. Qual decisão tomar?",
+        options: [
+          { text: "Opte por um caminho que vibra com a energia ancestral", action: "finalA" },
+          { text: "Escolha o caminho que o vento sussurra, mesmo com dúvidas", action: "finalB" },
+          { text: "Mantenha sua fé e siga pelo caminho que lhe foi destinado", action: "fase30" } // Correta
+        ]
+      },
+      fase30: {
+        text: "Fase 30 - Você chega a um mirante onde a vista da serra se estende até o infinito. Mas novos desafios se apresentam. Qual será seu próximo passo?",
+        options: [
+          { text: "Avance confiante rumo a horizontes desconhecidos", action: "fase31" }, // Correta
+          { text: "Pare para contemplar a imensidão e perca o rumo", action: "finalA" },
+          { text: "Desvie para explorar um pico isolado", action: "finalB" }
+        ]
+      },
+      // Fases 31 a 40
+      fase31: {
+        text: "Fase 31 - Ao deixar o mirante, você adentra uma região de densas matas e trilhas esquecidas. O som dos pássaros e o sussurro das folhas o acompanham. Como prosseguir?",
+        options: [
+          { text: "Siga pelo caminho mais iluminado entre as árvores", action: "finalA" },
+          { text: "Opte por uma trilha que serpenteia discretamente", action: "finalB" },
+          { text: "Confie em seu instinto e continue pelo caminho central", action: "fase32" } // Correta
+        ]
+      },
+      fase32: {
+        text: "Fase 32 - A trilha se estreita em um corredor natural, ladeado por imponentes árvores e murmúrios do passado. Qual a sua escolha?",
+        options: [
+          { text: "Investigue um som distante vindo de um arbusto", action: "finalA" },
+          { text: "Desvie para seguir um atalho tentador", action: "finalB" },
+          { text: "Mantenha o curso e siga o eco do vento", action: "fase33" } // Correta
+        ]
+      },
+      fase33: {
+        text: "Fase 33 - Você chega a uma clareira onde o sol penetra por entre as copas, revelando pinturas rupestres nas rochas. O que você faz?",
+        options: [
+          { text: "Examine as pinturas, imerso no passado", action: "finalA" },
+          { text: "Desvie para não se distrair com o antigo", action: "finalB" },
+          { text: "Siga em frente, mantendo o foco na trilha", action: "fase34" } // Correta
+        ]
+      },
+      fase34: {
+        text: "Fase 34 - A paisagem muda para um terreno rochoso e escarpado, onde cada passo é um desafio. Qual decisão tomar?",
+        options: [
+          { text: "Procure por uma rota mais fácil entre as pedras", action: "finalA" },
+          { text: "Desvie para explorar uma fenda suspeita", action: "finalB" },
+          { text: "Encare o desafio e siga pela rota principal", action: "fase35" } // Correta
+        ]
+      },
+      fase35: {
+        text: "Fase 35 - No alto de uma crista, o vento sopra com força e revela segredos do passado. Como você procede?",
+        options: [
+          { text: "Pare para sentir o vento e se perder em devaneios", action: "finalA" },
+          { text: "Desvie para explorar uma formação rochosa lateral", action: "finalB" },
+          { text: "Mantenha o foco e avance rumo à próxima etapa", action: "fase36" } // Correta
+        ]
+      },
+      fase36: {
+        text: "Fase 36 - A trilha se torna sinuosa, cortando entre vales ocultos e picos imponentes. Qual seu próximo passo?",
+        options: [
+          { text: "Escolha uma rota que serpenteia entre os vales", action: "finalA" },
+          { text: "Opte por um atalho arriscado entre as rochas", action: "finalB" },
+          { text: "Siga o caminho traçado pela natureza", action: "fase37" } // Correta
+        ]
+      },
+      fase37: {
+        text: "Fase 37 - Você adentra uma região onde a luz e a sombra se misturam em uma dança hipnotizante. Qual será sua escolha?",
+        options: [
+          { text: "Examine de perto os fenômenos ao seu redor", action: "finalA" },
+          { text: "Desvie para explorar um caminho lateral enigmático", action: "finalB" },
+          { text: "Mantenha sua determinação e siga pela trilha central", action: "fase38" } // Correta
+        ]
+      },
+      fase38: {
+        text: "Fase 38 - Entre rochas e vegetação, você descobre um vale oculto onde ecos do passado ressoam. O que você faz?",
+        options: [
+          { text: "Investigue os ecos e se perca nas memórias do vale", action: "finalA" },
+          { text: "Desvie para seguir um som estranho nas proximidades", action: "finalB" },
+          { text: "Siga firme pela trilha que conduz ao desconhecido", action: "fase39" } // Correta
+        ]
+      },
+      fase39: {
+        text: "Fase 39 - A jornada o leva a uma encruzilhada onde o tempo parece desacelerar. Qual decisão você toma?",
+        options: [
+          { text: "Opte por um caminho que evoca memórias distantes", action: "finalA" },
+          { text: "Siga o instinto e arrisque um desvio inesperado", action: "finalB" },
+          { text: "Confie em sua intuição e siga pelo caminho predestinado", action: "fase40" } // Correta
+        ]
+      },
+      fase40: {
+        text: "Fase 40 - Você emerge de um túnel natural formado por rochas e luz, onde a energia da serra se intensifica. Qual seu próximo passo?",
+        options: [
+          { text: "Pare para absorver a energia, mas se perca em devaneios", action: "finalA" },
+          { text: "Desvie para explorar uma passagem lateral oculta", action: "finalB" },
+          { text: "Abrace a energia e siga com convicção", action: "fase41" } // Correta
+        ]
+      },
+      // Fases 41 a 50
+      fase41: {
+        text: "Fase 41 - A trilha agora se apresenta em um cenário de rara beleza, com cascatas e formações naturais. Como prosseguir?",
+        options: [
+          { text: "Aproxime-se de uma cachoeira e se distraia com seu encanto", action: "finalA" },
+          { text: "Desvie para explorar uma área próxima, perdendo o foco", action: "finalB" },
+          { text: "Mantenha-se na rota e avance pelo vale", action: "fase42" } // Correta
+        ]
+      },
+      fase42: {
+        text: "Fase 42 - Ao avançar pelo vale, você encontra um campo de flores silvestres que exalam um aroma místico. Qual sua decisão?",
+        options: [
+          { text: "Pare para colher algumas flores e se perder no perfume", action: "finalA" },
+          { text: "Desvie para investigar uma trilha entre as flores", action: "finalB" },
+          { text: "Siga adiante, mantendo a atenção no caminho", action: "fase43" } // Correta
+        ]
+      },
+      fase43: {
+        text: "Fase 43 - A trilha se torna mais íngreme, e a paisagem revela formações rochosas únicas, esculpidas pelo tempo. O que você faz?",
+        options: [
+          { text: "Examine as formações em detalhes, arriscando perder o rumo", action: "finalA" },
+          { text: "Desvie para seguir um caminho paralelo e incerto", action: "finalB" },
+          { text: "Encare o desafio e continue pela trilha principal", action: "fase44" } // Correta
+        ]
+      },
+      fase44: {
+        text: "Fase 44 - Em um trecho repleto de desafios, a serra se revela em sua plenitude. O horizonte parece chamar por você. Qual é sua escolha?",
+        options: [
+          { text: "Pare para admirar a vastidão e se distraia", action: "finalA" },
+          { text: "Desvie para explorar uma rota secundária", action: "finalB" },
+          { text: "Siga em direção ao horizonte com determinação", action: "fase45" } // Correta
+        ]
+      },
+      fase45: {
+        text: "Fase 45 - A cada passo, a lenda da Transtravessia se intensifica. Você sente que algo grandioso se aproxima. Qual será seu próximo passo?",
+        options: [
+          { text: "Investigue uma anomalia no terreno e se perca", action: "finalA" },
+          { text: "Desvie para explorar um eco distante", action: "finalB" },
+          { text: "Mantenha sua fé e continue avançando", action: "fase46" } // Correta
+        ]
+      },
+      fase46: {
+        text: "Fase 46 - Você chega a um antigo mirante onde a serra se descortina em toda sua majestade. O tempo parece parar. Como prosseguir?",
+        options: [
+          { text: "Pare para contemplar a cena e se perder na emoção", action: "finalA" },
+          { text: "Desvie para explorar os arredores do mirante", action: "finalB" },
+          { text: "Siga o caminho que o mirante revela", action: "fase47" } // Correta
+        ]
+      },
+      fase47: {
+        text: "Fase 47 - A trilha o conduz por um corredor de sombras e luz, onde a realidade parece se misturar com a lenda. Qual sua decisão?",
+        options: [
+          { text: "Examine minuciosamente cada detalhe, arriscando perder o rumo", action: "finalA" },
+          { text: "Desvie para um caminho secundário repleto de incertezas", action: "finalB" },
+          { text: "Confie em sua intuição e avance com firmeza", action: "fase48" } // Correta
+        ]
+      },
+      fase48: {
+        text: "Fase 48 - Em meio a penhascos e vales profundos, você encontra um santuário natural, onde a natureza exala poder. Qual será seu próximo passo?",
+        options: [
+          { text: "Pare para absorver toda a energia do santuário e se perca", action: "finalA" },
+          { text: "Desvie para explorar um detalhe impressionante do local", action: "finalB" },
+          { text: "Mantenha o foco e siga o santuário como guia", action: "fase49" } // Correta
+        ]
+      },
+      fase49: {
+        text: "Fase 49 - Ao se aproximar do clímax da jornada, a serra se apresenta em um espetáculo de cores, sombras e mistérios. Qual sua escolha?",
+        options: [
+          { text: "Siga um caminho que ressoa com as lendas do passado", action: "finalA" },
+          { text: "Desvie para um atalho tentador, mas arriscado", action: "finalB" },
+          { text: "Confie na essência da trilha e siga adiante", action: "fase50" } // Correta
+        ]
+      },
+      fase50: {
+        text: "Você alcança o ápice da Transtravessia. Diante de um panorama de tirar o fôlego, a lenda se revela: você se torna parte da história eterna, inscrito nas rochas e no tempo. Parabéns, aventureiro, por descobrir o caminho verdadeiro!",
+        options: []
+      },
+      // Finais inesperados
+      finalA: {
+        text: "Ao escolher um caminho que não o levava ao destino, você se perdeu entre as brumas e sombras da serra. Sua jornada termina aqui, envolta em mistério.",
+        options: [
+          { text: "Reiniciar Aventura", action: "fase1" }
+        ]
+      },
+      finalB: {
+        text: "A Transtravessia revelou seus segredos sombrios e sua escolha selou um destino de desaparecimento. Você se tornou apenas um eco na lenda.",
+        options: [
+          { text: "Reiniciar Aventura", action: "fase1" }
+        ]
+      }
+    };
+
+    // Referências aos elementos do HTML
+    const storyDiv = document.getElementById('story');
+    const optionsDiv = document.getElementById('options');
+
+    // Função que exibe a cena (fase ou final) a partir da chave informada
+    function showScene(sceneKey) {
+      const scene = gameData[sceneKey];
+      storyDiv.textContent = scene.text;
+      optionsDiv.innerHTML = ''; // Limpa as opções anteriores
+
+      // Embaralha as opções para exibição aleatória
+      const shuffledOptions = shuffleArray(scene.options);
+
+      shuffledOptions.forEach(option => {
+        const btn = document.createElement('button');
+        btn.textContent = option.text;
+        btn.onclick = () => showScene(option.action);
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option';
+        optionDiv.appendChild(btn);
+        optionsDiv.appendChild(optionDiv);
+      });
+    }
+
+    // Inicia o jogo a partir da Fase 1
+    showScene('fase1');
+  </script>
+</body>
+</html>
